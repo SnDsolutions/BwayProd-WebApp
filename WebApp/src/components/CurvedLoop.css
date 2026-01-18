@@ -1,0 +1,45 @@
+
+.curved-text-container {
+  width: 100%;
+  height: 100px; /* Reduced height */
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  user-select: none;
+  z-index: 10;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.curved-svg {
+  width: 100%;
+  min-width: 1200px;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.curved-text-path {
+  fill: none;
+  stroke: none;
+}
+
+.curved-text {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: 2px;
+  fill: rgba(255, 255, 255, 0.1); 
+  pointer-events: auto;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+  text-transform: uppercase;
+}
+
+.curved-text:hover {
+  fill: #22d3ee; /* cyan-400 */
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.6));
+  font-size: 30px; 
+}

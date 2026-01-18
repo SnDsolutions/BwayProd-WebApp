@@ -1,0 +1,10 @@
+dist/llms.txt
+dist/index.html
+dist/vite.svg
+dist/INSTRUCCIONES-DESPLIEGUE.txt
+dist/lista-archivos.txt
+dist/sitemap.xml
+dist/robots.txt
+dist/assets/index-98f81892.css
+dist/assets/index-582e764f.js
+dist/.htaccess
