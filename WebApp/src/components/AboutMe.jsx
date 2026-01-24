@@ -63,7 +63,7 @@ const AboutMe = () => {
           <motion.div variants={fadeIn} className="bg-surface-highlight p-8 rounded-lg border border-dark-gray-border">
             <div className="space-y-4 font-poppins">
               <p><span className="text-text-secondary">Call Today:</span> <a href="tel:+50671032432" className="hover:text-lime-accent transition-colors">+506 7103-2432</a></p>
-              <p><span className="text-text-secondary">Email:</span> <a href="mailto:bwayproductions420@gmail.com" className="hover:text-lime-accent transition-colors">bwayproductions420@gmail.com</a></p>
+              <p><span className="text-text-secondary">Email:</span> <a href="mailto:info@bwayprod.com" className="hover:text-lime-accent transition-colors">info@bwayprod.com</a></p>
             </div>
             <hr className="border-dark-gray-border my-6" />
             <div className="flex items-center space-x-5 mb-8">
