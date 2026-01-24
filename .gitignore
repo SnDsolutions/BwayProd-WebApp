@@ -5,6 +5,7 @@ WebApp/dist/
 
 # Git
 WebApp/.git/
+WebApp/.git.backup/
 
 # Environment files
 .env
@@ -34,3 +35,7 @@ pnpm-debug.log*
 
 # Misc
 horizons-export-*.zip
+
+# Dev artifacts
+WebApp/.vite/
+WebApp/vite.config.js.timestamp-*.mjs

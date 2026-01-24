@@ -1,24 +1,50 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Camera, Send, X, MessageCircle } from 'lucide-react';
+import { Camera, Send, X, MessageCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { N8N_WEBHOOK_URL, N8N_CONFIG } from '@/config/n8n';
+import { useToast } from '@/components/ui/use-toast';
 
 const Chatbot = () => {
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
-  const [visitCount] = useState(() => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+  const visitCount = useState(() => {
     const count = localStorage.getItem('bway_chat_visits');
     const newCount = count ? parseInt(count) + 1 : 1;
     localStorage.setItem('bway_chat_visits', newCount.toString());
     return newCount;
-  });
+  })[0];
+
+  // Frases que cambian cada 6 segundos
+  const phrases = [
+    "¿Tienes preguntas? ¡Pregúntame!",
+    "Hablemos de tu proyecto",
+    "Cotización gratis aquí",
+    "Resuelvo tus dudas al instante",
+    "¿Necesitas ayuda? Estoy aquí",
+    "Conoce nuestros servicios",
+    "Agenda tu sesión perfecta",
+    "Te ayudo a crear contenido increíble"
+  ];
+
+  // Cambiar frase cada 6 segundos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPhraseIndex((prev) => (prev + 1) % phrases.length);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [phrases.length]);
   
   const [messages, setMessages] = useState([
     {
       id: 1,
-      text: `¡Hola! Soy el asistente virtual de BWAY Productions. Esta es tu visita número ${visitCount}. ¿En qué puedo ayudarte hoy?`,
+      text: '¡Hola! Soy el asistente virtual de BWAY Productions. ¿En qué puedo ayudarte hoy?',
       sender: 'bot',
       timestamp: new Date()
     }
@@ -34,31 +60,97 @@ const Chatbot = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  // Enviar mensaje a n8n
+  const sendToN8N = async (userMessage) => {
+    if (!N8N_WEBHOOK_URL) {
+      console.warn('N8N_WEBHOOK_URL no configurada. Usando respuesta local.');
+      return getBotResponse(userMessage);
+    }
 
+    try {
+      const response = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          visitCount: visitCount,
+          timestamp: new Date().toISOString(),
+          // Puedes agregar más contexto aquí
+          context: {
+            page: window.location.pathname,
+            userAgent: navigator.userAgent,
+          }
+        }),
+        signal: AbortSignal.timeout(N8N_CONFIG.timeout),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // n8n puede devolver la respuesta en diferentes formatos
+      // Ajusta esto según cómo tu workflow de n8n devuelva la respuesta
+      return data.response || data.message || data.text || data.output || JSON.stringify(data);
+    } catch (error) {
+      console.error('Error al conectar con n8n:', error);
+      // Fallback a respuesta local si hay error
+      return getBotResponse(userMessage);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessageText = inputValue.trim();
     const userMessage = {
       id: messages.length + 1,
-      text: inputValue,
+      text: userMessageText,
       sender: 'user',
       timestamp: new Date()
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+    setIsLoading(true);
 
-    // Simular respuesta del bot después de un delay
-    setTimeout(() => {
+    try {
+      // Enviar a n8n y obtener respuesta
+      const botResponseText = await sendToN8N(userMessageText);
+      
       const botResponse = {
         id: messages.length + 2,
-        text: getBotResponse(inputValue),
+        text: botResponseText,
         sender: 'bot',
         timestamp: new Date()
       };
+      
       setMessages(prev => [...prev, botResponse]);
-    }, 1000);
+    } catch (error) {
+      console.error('Error al procesar mensaje:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo procesar tu mensaje. Por favor intenta de nuevo.",
+        variant: "destructive"
+      });
+      
+      // Mensaje de error al usuario
+      const errorMessage = {
+        id: messages.length + 2,
+        text: "Lo siento, hubo un error al procesar tu mensaje. Por favor intenta de nuevo o contáctanos directamente por WhatsApp al +506 7103-2432.",
+        sender: 'bot',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Respuesta local como fallback
   const getBotResponse = (userInput) => {
     const input = userInput.toLowerCase();
     
@@ -98,25 +190,62 @@ const Chatbot = () => {
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* Floating Action Button with Animated Text */}
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="fixed bottom-6 right-6 z-50"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-3"
       >
+        {/* Animated Phrase */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentPhraseIndex}
+            initial={{ opacity: 0, x: 10, scale: 0.9 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -10, scale: 0.9 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="hidden md:flex items-center"
+          >
+            <div className="bg-grafito/95 backdrop-blur-xl border border-white/20 rounded-full px-4 py-2 shadow-lg">
+              <p className="text-white text-sm font-medium whitespace-nowrap">
+                {phrases[currentPhraseIndex]}
+              </p>
+            </div>
+            {/* Arrow pointing to button */}
+            <div className="w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-grafito/95"></div>
+          </motion.div>
+        </AnimatePresence>
+
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg flex items-center justify-center text-white hover:bg-white/20 transition-all"
+              className="w-14 h-14 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-lg flex items-center justify-center text-white hover:bg-white/20 transition-all relative"
             >
               <Camera className="w-5 h-5" />
+              {/* Pulse animation */}
+              <motion.div
+                className="absolute inset-0 rounded-full bg-cyan-400/30"
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.5, 0, 0.5],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
             </motion.button>
           </DialogTrigger>
 
           <DialogContent className="max-w-sm w-[85vw] md:w-[340px] h-[70vh] md:h-[480px] p-0 flex flex-col bg-[#050508]/80 backdrop-blur-3xl border border-white/20 shadow-2xl overflow-hidden !fixed !bottom-20 md:!bottom-24 !right-4 md:!right-6 !left-auto !translate-x-0 !translate-y-0 !top-auto [&>button]:hidden relative" style={{ borderRadius: '24px' }}>
+            <DialogTitle className="sr-only">Chatbot de BWAY Productions</DialogTitle>
+            <DialogDescription className="sr-only">
+              Chat para consultas y soporte sobre servicios audiovisuales.
+            </DialogDescription>
             {/* Dynamic Background - Gradientes suaves sin blur */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[24px]">
               <div 
@@ -211,6 +340,23 @@ const Chatbot = () => {
                     </div>
                   </motion.div>
                 ))}
+                {/* Indicador de "escribiendo..." */}
+                {isLoading && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="flex justify-start"
+                  >
+                    <div className="max-w-[85%] rounded-2xl px-3 py-2.5 text-xs md:text-sm backdrop-blur-2xl bg-white/2 text-white/95 border border-white/10 shadow-sm">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
               <div ref={messagesEndRef} />
             </div>
@@ -231,10 +377,14 @@ const Chatbot = () => {
                 >
                   <Button
                     onClick={handleSend}
-                    disabled={!inputValue.trim()}
+                    disabled={!inputValue.trim() || isLoading}
                     className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-2xl border border-white/25 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed p-0 shadow-lg"
                   >
-                    <Send className="w-3.5 h-3.5 text-white" />
+                    {isLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5 text-white" />
+                    )}
                   </Button>
                 </motion.div>
               </div>

@@ -131,7 +131,22 @@ BwayProd-WebApp/
 
 ## 🚀 Despliegue a Producción
 
-### Método Automatizado (Recomendado)
+### 🤖 Método CI/CD Automático (Recomendado) ⭐
+
+El proyecto está configurado con **GitHub Actions** para desplegarse automáticamente cada vez que hagas `push` a la rama `main` o `master`.
+
+**Flujo automático:**
+1. Haces `git push` a `main`
+2. GitHub Actions detecta el cambio
+3. Construye la aplicación automáticamente
+4. Despliega a Hostinger vía FTP
+5. Los cambios aparecen en https://bwayprod.com/ en 2-5 minutos
+
+**Configuración inicial (solo una vez):**
+- Ve a `.github/CICD-SETUP.md` para instrucciones detalladas
+- Necesitas configurar los secrets de FTP en GitHub (Settings → Secrets → Actions)
+
+### 📤 Método Manual (Despliegue bajo demanda)
 
 ```bash
 cd WebApp
@@ -177,8 +192,10 @@ Todos los scripts deben ejecutarse desde la carpeta `WebApp`:
 | `npm run preview` | Previsualiza la versión de producción localmente |
 | `npm run clean` | Elimina la carpeta `dist/` |
 | `npm run build:clean` | Limpia y construye la aplicación |
-| `npm run deploy` | Build y despliegue automatizado vía FTP |
+| `npm run deploy` | Build y despliegue manual vía FTP |
 | `npm run deploy:ssh` | Build y despliegue vía SSH |
+
+**Nota:** Con CI/CD configurado, solo necesitas hacer `git push` para desplegar automáticamente.
 
 ---
 

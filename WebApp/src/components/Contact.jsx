@@ -17,8 +17,8 @@ const Contact = () => {
     {
       icon: <Mail className="w-6 h-6" />,
       title: 'Correo Electrónico',
-      content: 'bwayproductions420@gmail.com',
-      link: 'mailto:bwayproductions420@gmail.com',
+      content: 'info@bwayprod.com',
+      link: 'mailto:info@bwayprod.com',
       action: 'Escribir ahora',
       delay: 0.2
     },
