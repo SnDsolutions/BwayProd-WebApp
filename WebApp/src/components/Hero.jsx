@@ -31,6 +31,8 @@ const Hero = () => {
           loop
           muted={isMuted}
           playsInline
+          preload="metadata"
+          loading="lazy"
         >
           <source src="https://bwayprodcontent.s3.us-east-1.amazonaws.com/backup/Material+para+pagina/Recaps/Secuencia+bombom.mp4" type="video/mp4" />
           Your browser does not support the video tag.

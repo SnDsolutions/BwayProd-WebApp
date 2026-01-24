@@ -534,13 +534,14 @@ const otherPlans = [
   {
     id: 'other-3',
     name: 'Edición Profesional de Contenido',
-    price: 'Desde ₡180,000',
-    priceWithIVA: 'Desde ₡203,400 (IVA 13%)',
+    price: 'Desde ₡190,000',
+    priceWithIVA: 'Desde ₡214,700 (IVA 13%)',
     recommendedFor: 'Quienes tienen material grabado y necesitan edición profesional',
     features: [
-      'Edición de reels o videos',
+      'Hasta 6 reels (9:16) o 3 videos (1–2 min)',
       'Corrección de color',
       'Optimización de formatos',
+      'Entrega estimada: 3–5 días hábiles'
     ],
     highlight: false,
     category: 'other'

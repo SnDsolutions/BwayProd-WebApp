@@ -292,6 +292,8 @@ const VideoCarousel = () => {
                   loop
                   muted
                   playsInline
+                  preload="metadata"
+                  loading="lazy"
                   onLoadedData={(e) => {
                     e.target.play().catch(err => console.log('Error al reproducir:', err));
                   }}
@@ -415,6 +417,7 @@ const VideoCarousel = () => {
                   className="w-full h-auto"
                   controls
                   autoPlay
+                  preload="metadata"
                 />
               </div>
               
